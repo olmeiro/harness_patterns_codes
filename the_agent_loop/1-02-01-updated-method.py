@@ -1,4 +1,4 @@
-
+# Implementación en LangGraph del patrón Update Method para agentes conversacionales.
 import os
 from dataclasses import dataclass
 from typing import Any, TypedDict
