@@ -193,7 +193,7 @@ class FinanceAgent(BaseAgent):
 client = OpenAI(
     base_url=(
         f"{os.environ['AZURE_OPENAI_ENDPOINT'].rstrip('/')}"
-        "/openai/v1/"
+        "/"
     ),
     api_key=os.environ["AZURE_OPENAI_API_KEY"],
 )

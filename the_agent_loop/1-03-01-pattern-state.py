@@ -19,7 +19,7 @@ load_dotenv()
 
 client = OpenAI(
     api_key=os.environ["AZURE_OPENAI_API_KEY"],
-    base_url=os.environ["AZURE_OPENAI_ENDPOINT"].rstrip("/") + "/openai/v1/",
+    base_url=os.environ["AZURE_OPENAI_ENDPOINT"].rstrip("/") + "/",
 )
 MODEL = os.environ["AZURE_OPENAI_DEPLOYMENT"]
 

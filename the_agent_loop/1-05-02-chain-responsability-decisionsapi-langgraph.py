@@ -21,7 +21,7 @@ load_dotenv()
 
 def create_client(endpoint, key):
     return OpenAI(
-        base_url=endpoint.rstrip("/") + "/openai/v1/",
+        base_url=endpoint.rstrip("/") + "/",
         api_key=key,
     )
 
@@ -33,22 +33,24 @@ responses_client = create_client(
 
 decisions_client = create_client(
     os.getenv(
-        "AZURE_DECISIONS_ENDPOINT",
+        "AZURE_OPENAI_DECISIONS_ENDPOINT",
         os.environ["AZURE_OPENAI_ENDPOINT"],
     ),
     os.getenv(
-        "AZURE_DECISIONS_API_KEY",
+        "AZURE_OPENAI_DECISIONS_API_KEY",
         os.environ["AZURE_OPENAI_API_KEY"],
     ),
 )
 
-RESPONSES_MODEL = os.environ[
-    "AZURE_OPENAI_RESPONSES_DEPLOYMENT"
-]
+RESPONSES_MODEL = os.getenv(
+    "AZURE_OPENAI_RESPONSES_DEPLOYMENT",
+    os.environ["AZURE_OPENAI_DEPLOYMENT"],
+)
 
-DECISIONS_MODEL = os.environ[
-    "AZURE_OPENAI_DECISIONS_DEPLOYMENT"
-]
+DECISIONS_MODEL = os.getenv(
+    "AZURE_OPENAI_DECISIONS_DEPLOYMENT",
+    os.environ["AZURE_OPENAI_DEPLOYMENT"],
+)
 
 
 # ==========================================

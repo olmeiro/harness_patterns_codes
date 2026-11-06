@@ -4,6 +4,9 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 # 1. CONFIGURACIÓN DE AZURE OPENAI
@@ -12,7 +15,7 @@ client = OpenAI(
     api_key=os.environ["AZURE_OPENAI_API_KEY"],
     base_url=(
         os.environ["AZURE_OPENAI_ENDPOINT"].rstrip("/")
-        + "/openai/v1/"
+        + "/"
     ),
 )
 

@@ -5,6 +5,9 @@ from typing import Any, Literal, TypedDict
 from openai import OpenAI
 from pydantic import BaseModel
 from langgraph.graph import StateGraph, START, END
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 # ==========================================
@@ -93,7 +96,7 @@ class Estado(TypedDict, total=False):
 # ==========================================
 
 client = OpenAI(
-    base_url=os.environ["AZURE_OPENAI_BASE_URL"],
+    base_url=os.environ["AZURE_OPENAI_ENDPOINT"].rstrip("/") + "/",
     api_key=os.environ["AZURE_OPENAI_API_KEY"],
 )
 

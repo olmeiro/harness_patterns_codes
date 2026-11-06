@@ -6,6 +6,9 @@ from dataclasses import dataclass
 from typing import Literal
 
 from openai import OpenAI, OpenAIError
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 # ==========================================
@@ -14,7 +17,7 @@ from openai import OpenAI, OpenAIError
 
 def azure_client(endpoint: str, api_key: str):
     return OpenAI(
-        base_url=endpoint.rstrip("/") + "/openai/v1/",
+        base_url=endpoint.rstrip("/") + "/",
         api_key=api_key,
     )
 
@@ -35,13 +38,15 @@ decisions_client = azure_client(
     ),
 )
 
-RESPONSE_MODEL = os.environ[
-    "AZURE_OPENAI_RESPONSES_DEPLOYMENT"
-]
+RESPONSE_MODEL = os.getenv(
+    "AZURE_OPENAI_RESPONSES_DEPLOYMENT",
+    os.environ["AZURE_OPENAI_DEPLOYMENT"],
+)
 
-DECISION_MODEL = os.environ[
-    "AZURE_OPENAI_DECISIONS_DEPLOYMENT"
-]
+DECISION_MODEL = os.getenv(
+    "AZURE_OPENAI_DECISIONS_DEPLOYMENT",
+    os.environ["AZURE_OPENAI_DEPLOYMENT"],
+)
 
 
 # ==========================================

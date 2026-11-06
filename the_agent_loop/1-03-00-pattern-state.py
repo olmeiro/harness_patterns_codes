@@ -13,7 +13,7 @@ client = OpenAI(
     api_key=os.environ["AZURE_OPENAI_API_KEY"],
     base_url=(
         os.environ["AZURE_OPENAI_ENDPOINT"].rstrip("/")
-        + "/openai/v1/"
+        + "/"
     ),
 )
 

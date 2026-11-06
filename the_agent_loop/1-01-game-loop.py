@@ -2,10 +2,13 @@
 import os
 import json
 from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Cliente Azure OpenAI
 client = OpenAI(
-    base_url=os.environ["AZURE_OPENAI_ENDPOINT"].rstrip("/") + "/openai/v1/",
+    base_url=os.environ["AZURE_OPENAI_ENDPOINT"].rstrip("/") + "/",
     api_key=os.environ["AZURE_OPENAI_API_KEY"],
 )
 

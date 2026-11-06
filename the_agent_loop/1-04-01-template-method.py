@@ -253,7 +253,7 @@ llm = ChatOpenAI(
     model=os.environ["AZURE_OPENAI_DEPLOYMENT"],
     base_url=(
         os.environ["AZURE_OPENAI_ENDPOINT"].rstrip("/")
-        + "/openai/v1/"
+        + "/"
     ),
     api_key=os.environ["AZURE_OPENAI_API_KEY"],
     use_responses_api=True,
