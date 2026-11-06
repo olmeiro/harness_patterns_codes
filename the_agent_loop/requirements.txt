@@ -4,3 +4,5 @@ pydantic>=2.0
 langchain-core>=0.3
 langchain-openai>=0.2
 langgraph>=0.2.57
+fastapi>=0.115
+uvicorn>=0.30
