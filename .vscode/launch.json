@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug: composite pattern",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/the_agent_loop/1-09-00-composite-pattern.py",
+            "cwd": "${workspaceFolder}/the_agent_loop",
+            "python": "${workspaceFolder}/the_agent_loop/.venv/Scripts/python.exe",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Debug: archivo abierto",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "cwd": "${fileDirname}",
+            "python": "${workspaceFolder}/the_agent_loop/.venv/Scripts/python.exe",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
