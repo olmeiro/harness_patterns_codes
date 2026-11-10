@@ -1,4 +1,3 @@
-
 import json
 import os
 from collections import deque
@@ -11,10 +10,7 @@ load_dotenv()
 
 client = OpenAI(
     api_key=os.environ["AZURE_OPENAI_API_KEY"],
-    base_url=(
-        os.environ["AZURE_OPENAI_ENDPOINT"].rstrip("/")
-        + "/"
-    ),
+    base_url=(os.environ["AZURE_OPENAI_ENDPOINT"].rstrip("/") + "/"),
 )
 
 MODEL = os.environ["AZURE_OPENAI_DEPLOYMENT"]
@@ -67,6 +63,7 @@ def update_order_status(order_id: str, status: str) -> dict:
 # 1. CLASE BASE DEL PATRÓN STATE
 # =====================================================
 
+
 class State:
     def on_message(self, session, message):
         raise RuntimeError("Este estado no admite mensajes")
@@ -85,11 +82,10 @@ class State:
 # 2. ESTADOS CONCRETOS
 # =====================================================
 
+
 class Idle(State):
     def on_message(self, session, message):
-        session.pending_input = [
-            {"role": "user", "content": message}
-        ]
+        session.pending_input = [{"role": "user", "content": message}]
         return CallingModel()
 
 
@@ -120,10 +116,7 @@ class CallingModel(State):
         session.response_id = response.id
         session.pending_input = []
 
-        calls = [
-            item for item in response.output
-            if item.type == "function_call"
-        ]
+        calls = [item for item in response.output if item.type == "function_call"]
 
         if calls:
             return AwaitingApproval(calls[0])
@@ -190,6 +183,7 @@ class Done(State):
 # 3. SESIÓN DEL AGENTE
 # =====================================================
 
+
 @dataclass
 class AgentSession:
     state: State = field(default_factory=Idle)
@@ -199,10 +193,7 @@ class AgentSession:
     final_answer: str = ""
 
     def transition(self, new_state):
-        print(
-            f"[STATE] {type(self.state).__name__} "
-            f"-> {type(new_state).__name__}"
-        )
+        print(f"[STATE] {type(self.state).__name__} -> {type(new_state).__name__}")
         self.state = new_state
 
     def add_tool_result(self, call, result):
@@ -231,9 +222,7 @@ class AgentSession:
 
     def advance(self):
         """Avanza hasta Idle o hasta requerir aprobación."""
-        while not isinstance(
-            self.state, (Idle, AwaitingApproval)
-        ):
+        while not isinstance(self.state, (Idle, AwaitingApproval)):
             next_state = self.state.step(self)
             self.transition(next_state)
 
@@ -243,9 +232,7 @@ class AgentSession:
             next_state = self.state.on_message(self, message)
             self.transition(next_state)
 
-            while not isinstance(
-                self.state, (Idle, AwaitingApproval)
-            ):
+            while not isinstance(self.state, (Idle, AwaitingApproval)):
                 next_state = self.state.step(self)
                 self.transition(next_state)
 
@@ -253,6 +240,7 @@ class AgentSession:
 # =====================================================
 # 4. INTERFAZ DE CONSOLA
 # =====================================================
+
 
 def main():
     session = AgentSession()
@@ -267,9 +255,7 @@ def main():
             print(f"Herramienta: {call.name}")
             print(f"Argumentos: {call.arguments}")
 
-            answer = input(
-                "¿Aprobar? (si/no): "
-            ).strip().lower()
+            answer = input("¿Aprobar? (si/no): ").strip().lower()
 
             if answer == "si":
                 session.on_approve()

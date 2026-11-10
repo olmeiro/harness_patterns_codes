@@ -1,11 +1,10 @@
-
 import os
 from typing import Any, Literal, TypedDict
 
+from dotenv import load_dotenv
+from langgraph.graph import END, START, StateGraph
 from openai import OpenAI
 from pydantic import BaseModel
-from langgraph.graph import StateGraph, START, END
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -13,6 +12,7 @@ load_dotenv()
 # ==========================================
 # 1. Gramática del agente (DSL)
 # ==========================================
+
 
 class Paso(BaseModel):
     accion: Literal["agregar", "listar"]
@@ -26,6 +26,7 @@ class Programa(BaseModel):
 # ==========================================
 # 2. Clases del patrón Interpreter
 # ==========================================
+
 
 class Expr:
     def interpret(self, ctx):
@@ -51,15 +52,13 @@ class Seq(Expr):
         self.pasos = pasos
 
     def interpret(self, ctx):
-        return [
-            paso.interpret(ctx)
-            for paso in self.pasos
-        ]
+        return [paso.interpret(ctx) for paso in self.pasos]
 
 
 # ==========================================
 # 3. Parser: Programa -> AST
 # ==========================================
+
 
 def parse(programa: Programa) -> Seq:
     if not 1 <= len(programa.pasos) <= 10:
@@ -83,6 +82,7 @@ def parse(programa: Programa) -> Seq:
 # 4. Estado compartido de LangGraph
 # ==========================================
 
+
 class Estado(TypedDict, total=False):
     solicitud: str
     programa: dict[str, Any]
@@ -105,6 +105,7 @@ client = OpenAI(
 # 6. Nodos de LangGraph
 # ==========================================
 
+
 def generar_programa(state: Estado):
     response = client.responses.parse(
         model=os.environ["AZURE_OPENAI_DEPLOYMENT"],
@@ -118,29 +119,20 @@ def generar_programa(state: Estado):
         text_format=Programa,
     )
 
-    if (
-        response.status != "completed"
-        or response.output_parsed is None
-    ):
+    if response.status != "completed" or response.output_parsed is None:
         raise ValueError("No se obtuvo un programa válido")
 
-    return {
-        "programa": response.output_parsed.model_dump()
-    }
+    return {"programa": response.output_parsed.model_dump()}
 
 
 def construir_ast(state: Estado):
     programa = Programa.model_validate(state["programa"])
 
-    return {
-        "arbol": parse(programa)
-    }
+    return {"arbol": parse(programa)}
 
 
 def ejecutar_ast(state: Estado):
-    ctx = {
-        "tareas": list(state.get("tareas", []))
-    }
+    ctx = {"tareas": list(state.get("tareas", []))}
 
     resultados = state["arbol"].interpret(ctx)
 
@@ -172,13 +164,15 @@ graph = builder.compile()
 # 8. Ejecutar el agente
 # ==========================================
 
-resultado = graph.invoke({
-    "solicitud": (
-        'Agrega la tarea "Revisar documentación de Azure" '
-        "y después muéstrame todas mis tareas pendientes."
-    ),
-    "tareas": [],
-})
+resultado = graph.invoke(
+    {
+        "solicitud": (
+            'Agrega la tarea "Revisar documentación de Azure" '
+            "y después muéstrame todas mis tareas pendientes."
+        ),
+        "tareas": [],
+    }
+)
 
 print("Programa:", resultado["programa"])
 print("Resultados:", resultado["resultados"])

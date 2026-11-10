@@ -1,8 +1,8 @@
-
-import os
 import json
-from openai import OpenAI
+import os
+
 from dotenv import load_dotenv
+from openai import OpenAI
 
 load_dotenv()
 
@@ -14,12 +14,10 @@ client = OpenAI(
 
 deployment = os.environ["AZURE_OPENAI_DEPLOYMENT"]
 
+
 # Herramienta disponible para el agente
 def get_order_status(order_id: str) -> dict:
-    return {
-        "order_id": order_id,
-        "status": "En preparación"
-    }
+    return {"order_id": order_id, "status": "En preparación"}
 
 
 tools = [
@@ -29,13 +27,11 @@ tools = [
         "description": "Consulta el estado de un pedido.",
         "parameters": {
             "type": "object",
-            "properties": {
-                "order_id": {"type": "string"}
-            },
+            "properties": {"order_id": {"type": "string"}},
             "required": ["order_id"],
-            "additionalProperties": False
+            "additionalProperties": False,
         },
-        "strict": True
+        "strict": True,
     }
 ]
 
@@ -63,15 +59,10 @@ def agent_loop(user_input: str, max_turns: int = 5):
 
         # 2. Comprobar si la respuesta está incompleta
         if response.status != "completed":
-            raise RuntimeError(
-                f"Respuesta no completada: {response.status}"
-            )
+            raise RuntimeError(f"Respuesta no completada: {response.status}")
 
         # 3. Identificar solicitudes de herramientas
-        calls = [
-            item for item in response.output
-            if item.type == "function_call"
-        ]
+        calls = [item for item in response.output if item.type == "function_call"]
 
         # 4. Finalizar si no hay herramientas pendientes
         if not calls:
@@ -86,15 +77,15 @@ def agent_loop(user_input: str, max_turns: int = 5):
 
             args = json.loads(call.arguments)
 
-            result = get_order_status(
-                order_id=args["order_id"]
-            )
+            result = get_order_status(order_id=args["order_id"])
 
-            tool_results.append({
-                "type": "function_call_output",
-                "call_id": call.call_id,
-                "output": json.dumps(result)
-            })
+            tool_results.append(
+                {
+                    "type": "function_call_output",
+                    "call_id": call.call_id,
+                    "output": json.dumps(result),
+                }
+            )
 
         # 6. Preparar la siguiente iteración
         previous_response_id = response.id
@@ -104,8 +95,6 @@ def agent_loop(user_input: str, max_turns: int = 5):
 
 
 # Ejecutar el agente
-answer = agent_loop(
-    "¿Cuál es el estado del pedido 123?"
-)
+answer = agent_loop("¿Cuál es el estado del pedido 123?")
 
 print(answer)

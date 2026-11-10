@@ -1,9 +1,9 @@
-
 import os
 from typing import Literal
-from pydantic import BaseModel
-from openai import OpenAI
+
 from dotenv import load_dotenv
+from openai import OpenAI
+from pydantic import BaseModel
 
 load_dotenv()
 
@@ -11,9 +11,11 @@ load_dotenv()
 # 1. Definir la gramática del agente (DSL)
 # ==========================================
 
+
 class Paso(BaseModel):
     accion: Literal["agregar", "listar"]
     valor: str
+
 
 class Programa(BaseModel):
     pasos: list[Paso]
@@ -22,6 +24,7 @@ class Programa(BaseModel):
 # ==========================================
 # 2. Definir los nodos del Interpreter
 # ==========================================
+
 
 class Expr:
     def interpret(self, ctx):
@@ -47,15 +50,13 @@ class Seq(Expr):
         self.pasos = pasos
 
     def interpret(self, ctx):
-        return [
-            paso.interpret(ctx)
-            for paso in self.pasos
-        ]
+        return [paso.interpret(ctx) for paso in self.pasos]
 
 
 # ==========================================
 # 3. Parser: Programa -> Árbol de objetos
 # ==========================================
+
 
 def parse(programa):
     if not 1 <= len(programa.pasos) <= 10:

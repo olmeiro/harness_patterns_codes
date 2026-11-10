@@ -1,10 +1,10 @@
-
-import os
 import json
+import os
 from dataclasses import dataclass
 from typing import Literal
-from openai import OpenAI
+
 from dotenv import load_dotenv
+from openai import OpenAI
 
 load_dotenv()
 
@@ -15,10 +15,7 @@ load_dotenv()
 
 client = OpenAI(
     api_key=os.environ["AZURE_OPENAI_API_KEY"],
-    base_url=(
-        os.environ["AZURE_OPENAI_ENDPOINT"].rstrip("/")
-        + "/"
-    ),
+    base_url=(os.environ["AZURE_OPENAI_ENDPOINT"].rstrip("/") + "/"),
 )
 
 MODEL = os.environ["AZURE_OPENAI_DEPLOYMENT"]
@@ -27,6 +24,7 @@ MODEL = os.environ["AZURE_OPENAI_DEPLOYMENT"]
 # =====================================
 # 2. ESTRUCTURAS DEL PATRÓN
 # =====================================
+
 
 @dataclass
 class ToolCall:
@@ -44,6 +42,7 @@ class Decision:
 # =====================================
 # 3. HOOKS: CHAIN OF RESPONSIBILITY
 # =====================================
+
 
 def tool_allowlist(call: ToolCall) -> Decision:
     """Verifica que la herramienta esté autorizada."""
@@ -66,11 +65,7 @@ def recipient_guard(call: ToolCall) -> Decision:
 
     allowed_domains = {"empresa.com", "proveedor.com"}
 
-    if (
-        len(parts) != 2
-        or not parts[0]
-        or parts[1] not in allowed_domains
-    ):
+    if len(parts) != 2 or not parts[0] or parts[1] not in allowed_domains:
         return Decision("deny", "Destinatario no autorizado")
 
     return Decision("pass")
@@ -123,6 +118,7 @@ def human_approval(call: ToolCall) -> Decision:
 # =====================================
 # 4. HERRAMIENTA REAL (SIMULADA)
 # =====================================
+
 
 def execute_tool(call: ToolCall) -> dict:
     """Simula el envío; no envía correos reales."""
@@ -205,6 +201,7 @@ TOOLS = [
 # 7. RESPONSES API + CHAIN
 # =====================================
 
+
 def run_agent(user_message: str):
 
     response = client.responses.create(
@@ -225,7 +222,6 @@ def run_agent(user_message: str):
     tool_outputs = []
 
     for item in response.output:
-
         if item.type != "function_call":
             continue
 
@@ -244,11 +240,13 @@ def run_agent(user_message: str):
                 "message": str(exc),
             }
 
-        tool_outputs.append({
-            "type": "function_call_output",
-            "call_id": item.call_id,
-            "output": json.dumps(result),
-        })
+        tool_outputs.append(
+            {
+                "type": "function_call_output",
+                "call_id": item.call_id,
+                "output": json.dumps(result),
+            }
+        )
 
     if not tool_outputs:
         print(response.output_text)
@@ -269,7 +267,6 @@ def run_agent(user_message: str):
 # =====================================
 
 if __name__ == "__main__":
-
     run_agent(
         "Envía un correo a contacto@proveedor.com "
         "con asunto 'Reunión' indicando que "

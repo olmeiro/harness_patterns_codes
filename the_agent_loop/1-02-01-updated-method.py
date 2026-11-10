@@ -4,20 +4,16 @@ from dataclasses import dataclass
 from typing import Any, TypedDict
 
 from dotenv import load_dotenv
-from openai import OpenAI
-from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import InMemorySaver
-
+from langgraph.graph import END, START, StateGraph
+from openai import OpenAI
 
 # 1. CONFIGURACIÓN
 load_dotenv()
 
 client = OpenAI(
     api_key=os.environ["AZURE_OPENAI_API_KEY"],
-    base_url=(
-        os.environ["AZURE_OPENAI_ENDPOINT"].rstrip("/")
-        + "/"
-    ),
+    base_url=(os.environ["AZURE_OPENAI_ENDPOINT"].rstrip("/") + "/"),
 )
 
 DEPLOYMENT = os.environ["AZURE_OPENAI_DEPLOYMENT"]
@@ -48,10 +44,7 @@ class BudgetMeter:
         self.max_tokens = max_tokens
 
     def on_turn(self, ctx: TurnContext):
-        print(
-            f"[BudgetMeter] Tokens: "
-            f"{ctx.total_tokens}/{self.max_tokens}"
-        )
+        print(f"[BudgetMeter] Tokens: {ctx.total_tokens}/{self.max_tokens}")
 
         if ctx.total_tokens >= self.max_tokens:
             raise RuntimeError("Presupuesto agotado")
@@ -87,10 +80,7 @@ class Compactor:
             input=ctx.history,
         )
 
-        ctx.history = [
-            item.model_dump(mode="json", exclude_none=True)
-            for item in compacted.output
-        ]
+        ctx.history = [item.model_dump(mode="json", exclude_none=True) for item in compacted.output]
 
         ctx.last_input_tokens = 0
 
@@ -101,9 +91,7 @@ systems = [
     Compactor(
         client=client,
         deployment=DEPLOYMENT,
-        context_window=int(
-            os.getenv("AZURE_OPENAI_CONTEXT_WINDOW", "128000")
-        ),
+        context_window=int(os.getenv("AZURE_OPENAI_CONTEXT_WINDOW", "128000")),
     ),
 ]
 
@@ -147,28 +135,18 @@ def call_model(state: AgentState) -> dict:
     )
 
     if response.status != "completed":
-        raise RuntimeError(
-            f"Respuesta no completada: {response.status}"
-        )
+        raise RuntimeError(f"Respuesta no completada: {response.status}")
 
     # Serializar los elementos para el checkpointer
-    output_items = [
-        item.model_dump(mode="json", exclude_none=True)
-        for item in response.output
-    ]
+    output_items = [item.model_dump(mode="json", exclude_none=True) for item in response.output]
 
     usage = response.usage
 
     return {
         "history": history + output_items,
         "answer": response.output_text,
-        "total_tokens": (
-            state.get("total_tokens", 0)
-            + (usage.total_tokens if usage else 0)
-        ),
-        "last_input_tokens": (
-            usage.input_tokens if usage else 0
-        ),
+        "total_tokens": (state.get("total_tokens", 0) + (usage.total_tokens if usage else 0)),
+        "last_input_tokens": (usage.input_tokens if usage else 0),
     }
 
 
@@ -189,11 +167,7 @@ graph = builder.compile(checkpointer=checkpointer)
 
 # 10. EJECUCIÓN
 if __name__ == "__main__":
-    config = {
-        "configurable": {
-            "thread_id": "conversacion-001"
-        }
-    }
+    config = {"configurable": {"thread_id": "conversacion-001"}}
 
     prompts = [
         "¿Qué es un agente de inteligencia artificial?",

@@ -1,15 +1,12 @@
-
 import os
 import re
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import TypedDict, NotRequired
+from typing import NotRequired, TypedDict
 
 from dotenv import load_dotenv
+from langgraph.graph import END, START, StateGraph
 from openai import OpenAI
-from langgraph.graph import StateGraph, START, END
-
 
 # ========================================
 # 1. AZURE OPENAI
@@ -28,9 +25,9 @@ client = OpenAI(
 # 2. PATRÓN COMPOSITE
 # ========================================
 
+
 # Interfaz común (Component)
 class Block(ABC):
-
     @abstractmethod
     def render(self) -> str:
         pass
@@ -53,17 +50,9 @@ class TextBlock(Block):
         return self.text
 
     def redact(self) -> Block:
-        clean = re.sub(
-            r"\b[\w.+-]+@[\w.-]+\.\w+\b",
-            "[EMAIL_OCULTO]",
-            self.text
-        )
+        clean = re.sub(r"\b[\w.+-]+@[\w.-]+\.\w+\b", "[EMAIL_OCULTO]", self.text)
 
-        clean = re.sub(
-            r"(?i)\b(token|password|api_key)\s*[:=]\s*\S+",
-            r"\1=[OCULTO]",
-            clean
-        )
+        clean = re.sub(r"(?i)\b(token|password|api_key)\s*[:=]\s*\S+", r"\1=[OCULTO]", clean)
 
         return TextBlock(clean)
 
@@ -87,20 +76,16 @@ class CompositeBlock(Block):
         return "\n".join(lines)
 
     def redact(self) -> Block:
-        return CompositeBlock(
-            self.name,
-            [child.redact() for child in self.children]
-        )
+        return CompositeBlock(self.name, [child.redact() for child in self.children])
 
     def count(self) -> int:
-        return sum(
-            child.count() for child in self.children
-        )
+        return sum(child.count() for child in self.children)
 
 
 # ========================================
 # 3. ESTADO DE LANGGRAPH
 # ========================================
+
 
 class TicketState(TypedDict):
     ticket: Block
@@ -114,23 +99,19 @@ class TicketState(TypedDict):
 # 4. NODOS DEL GRAFO
 # ========================================
 
+
 # Nodo 1: Depurar contenido
 def depurar_ticket(state: TicketState):
     ticket = state["ticket"]
 
-    return {
-        "ticket_limpio": ticket.redact()
-    }
+    return {"ticket_limpio": ticket.redact()}
 
 
 # Nodo 2: Preparar contexto
 def preparar_contexto(state: TicketState):
     ticket = state["ticket_limpio"]
 
-    return {
-        "contexto": ticket.render(),
-        "cantidad_bloques": ticket.count()
-    }
+    return {"contexto": ticket.render(), "cantidad_bloques": ticket.count()}
 
 
 # Nodo 3: Análisis con LLM
@@ -151,9 +132,7 @@ def analizar_ticket(state: TicketState):
         store=False,
     )
 
-    return {
-        "analisis": response.output_text
-    }
+    return {"analisis": response.output_text}
 
 
 # ========================================
@@ -184,41 +163,30 @@ ticket = CompositeBlock(
         CompositeBlock(
             name="Descripción",
             children=[
-                TextBlock(
-                    "La plataforma de pagos devuelve "
-                    "error 504. Contacto: ana@empresa.com"
-                )
-            ]
+                TextBlock("La plataforma de pagos devuelve error 504. Contacto: ana@empresa.com")
+            ],
         ),
         CompositeBlock(
             name="Comentarios",
             children=[
-                TextBlock(
-                    "Cliente: falla en 8 de 10 intentos."
-                ),
-                TextBlock(
-                    "Soporte: error reproducido."
-                )
-            ]
+                TextBlock("Cliente: falla en 8 de 10 intentos."),
+                TextBlock("Soporte: error reproducido."),
+            ],
         ),
         CompositeBlock(
             name="Resultado de herramienta",
             children=[
-                TextBlock(
-                    "API /checkout: HTTP 504 Gateway Timeout."
-                ),
+                TextBlock("API /checkout: HTTP 504 Gateway Timeout."),
                 CompositeBlock(
                     name="Logs",
                     children=[
-                        TextBlock(
-                            "Timeout en payments-api después de 30s."
-                        ),
-                        TextBlock("token=abc123456")
-                    ]
-                )
-            ]
-        )
-    ]
+                        TextBlock("Timeout en payments-api después de 30s."),
+                        TextBlock("token=abc123456"),
+                    ],
+                ),
+            ],
+        ),
+    ],
 )
 
 
@@ -226,9 +194,7 @@ ticket = CompositeBlock(
 # 7. EJECUTAR EL AGENTE
 # ========================================
 
-result = graph.invoke({
-    "ticket": ticket
-})
+result = graph.invoke({"ticket": ticket})
 
 print("=== CONTEXTO DEPURADO ===")
 print(result["contexto"])

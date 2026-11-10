@@ -1,10 +1,9 @@
-
 import os
 from dataclasses import dataclass, field
 from typing import Any
 
-from openai import OpenAI
 from dotenv import load_dotenv
+from openai import OpenAI
 
 load_dotenv()
 
@@ -13,16 +12,14 @@ load_dotenv()
 
 client = OpenAI(
     api_key=os.environ["AZURE_OPENAI_API_KEY"],
-    base_url=(
-        os.environ["AZURE_OPENAI_ENDPOINT"].rstrip("/")
-        + "/"
-    ),
+    base_url=(os.environ["AZURE_OPENAI_ENDPOINT"].rstrip("/") + "/"),
 )
 
 DEPLOYMENT = os.environ["AZURE_OPENAI_DEPLOYMENT"]
 
 
 # 2. ESTADO DEL AGENTE Y CONTEXTO DEL TURNO
+
 
 @dataclass
 class AgentState:
@@ -39,6 +36,7 @@ class TurnContext:
 
 # 3. SUBSISTEMA: MEDIDOR DE PRESUPUESTO
 
+
 class BudgetMeter:
     def __init__(self, max_tokens: int = 50_000):
         self.max_tokens = max_tokens
@@ -53,6 +51,7 @@ class BudgetMeter:
 
 
 # 4. SUBSISTEMA: COMPACTADOR
+
 
 class Compactor:
     def __init__(
@@ -105,11 +104,11 @@ systems = [
 
 # 6. BUCLE PRINCIPAL DEL AGENTE
 
+
 def agent_loop(prompts: list[str]):
     state = AgentState()
 
     for number, prompt in enumerate(prompts, start=1):
-
         print(f"\n========== TURNO {number} ==========")
 
         # Construir el contexto del turno
@@ -124,10 +123,12 @@ def agent_loop(prompts: list[str]):
             system.on_turn(ctx)
 
         # Agregar el mensaje del usuario
-        state.history.append({
-            "role": "user",
-            "content": prompt,
-        })
+        state.history.append(
+            {
+                "role": "user",
+                "content": prompt,
+            }
+        )
 
         # Llamar a Azure OpenAI Responses API
         response = client.responses.create(
@@ -137,9 +138,7 @@ def agent_loop(prompts: list[str]):
         )
 
         if response.status != "completed":
-            raise RuntimeError(
-                f"Respuesta no completada: {response.status}"
-            )
+            raise RuntimeError(f"Respuesta no completada: {response.status}")
 
         print(f"Agente: {response.output_text}")
 
@@ -149,16 +148,16 @@ def agent_loop(prompts: list[str]):
         # Actualizar métricas para el siguiente turno
         if response.usage:
             state.total_tokens += response.usage.total_tokens
-            state.last_input_tokens = (
-                response.usage.input_tokens
-            )
+            state.last_input_tokens = response.usage.input_tokens
 
 
 # 7. EJECUCIÓN
 
 if __name__ == "__main__":
-    agent_loop([
-        "¿Qué es un agente de inteligencia artificial?",
-        "Explícalo en términos más sencillos.",
-        "¿Cómo se relaciona con LangGraph?",
-    ])
+    agent_loop(
+        [
+            "¿Qué es un agente de inteligencia artificial?",
+            "Explícalo en términos más sencillos.",
+            "¿Cómo se relaciona con LangGraph?",
+        ]
+    )

@@ -1,12 +1,11 @@
-
 import json
 import os
 import re
 from dataclasses import dataclass
 from typing import Literal
 
-from openai import OpenAI, OpenAIError
 from dotenv import load_dotenv
+from openai import OpenAI, OpenAIError
 
 load_dotenv()
 
@@ -14,6 +13,7 @@ load_dotenv()
 # ==========================================
 # 1. CLIENTES DE AZURE OPENAI
 # ==========================================
+
 
 def azure_client(endpoint: str, api_key: str):
     return OpenAI(
@@ -53,6 +53,7 @@ DECISION_MODEL = os.getenv(
 # 2. ESTRUCTURAS DEL PATRÓN
 # ==========================================
 
+
 @dataclass
 class ToolCall:
     name: str
@@ -70,19 +71,14 @@ class Decision:
 # 3. HOOKS DETERMINISTAS
 # ==========================================
 
+
 def tool_allowlist(call: ToolCall) -> Decision:
     if call.name != "send_email":
         return Decision("deny", "Herramienta no permitida")
 
     required = {"to", "subject", "body"}
 
-    if (
-        set(call.args) != required
-        or any(
-            not isinstance(call.args[k], str)
-            for k in required
-        )
-    ):
+    if set(call.args) != required or any(not isinstance(call.args[k], str) for k in required):
         return Decision("deny", "Argumentos inválidos")
 
     return Decision("pass")
@@ -107,7 +103,9 @@ def recipient_guard(call: ToolCall) -> Decision:
 # 4. HOOK INTELIGENTE: DECISIONS API
 # ==========================================
 
-def ai_decisions_guard(call: ToolCall) -> Decision:
+
+# Cada return es un motivo de deny distinto: es el patrón fail-closed que ilustra el ejemplo.
+def ai_decisions_guard(call: ToolCall) -> Decision:  # noqa: PLR0911
 
     # Los argumentos de la herramienta son
     # la evidencia que evaluará el modelo.
@@ -141,22 +139,19 @@ def ai_decisions_guard(call: ToolCall) -> Decision:
                     "type": "choice",
                     "name": "communication_type",
                     "instructions": (
-                        "Classify the business email according "
-                        "to its content and disclosure risk."
+                        "Classify the business email according to its content and disclosure risk."
                     ),
                     "choices": [
                         {
                             "value": "routine",
                             "description": (
-                                "Ordinary business communication "
-                                "without restricted information."
+                                "Ordinary business communication without restricted information."
                             ),
                         },
                         {
                             "value": "sensitive",
                             "description": (
-                                "Communication involving sensitive "
-                                "or restricted information."
+                                "Communication involving sensitive or restricted information."
                             ),
                         },
                         {
@@ -176,11 +171,7 @@ def ai_decisions_guard(call: ToolCall) -> Decision:
             "No fue posible completar la evaluación de IA",
         )
 
-    answers = {
-        answer.name: answer
-        for answer in result.answers
-        if answer.name is not None
-    }
+    answers = {answer.name: answer for answer in result.answers if answer.name is not None}
 
     sensitive = answers.get("sensitive_content")
     category = answers.get("communication_type")
@@ -208,10 +199,7 @@ def ai_decisions_guard(call: ToolCall) -> Decision:
         )
 
     print(f"[AI] Riesgo sensible: {probability:.2f}")
-    print(
-        f"[AI] Categoría: {category.choice} "
-        f"(confianza: {confidence:.2f})"
-    )
+    print(f"[AI] Categoría: {category.choice} (confianza: {confidence:.2f})")
 
     # Umbrales ilustrativos, no calibrados.
     if probability >= 0.25:
@@ -239,6 +227,7 @@ def ai_decisions_guard(call: ToolCall) -> Decision:
 # 5. HOOK DE MODIFICACIÓN
 # ==========================================
 
+
 def add_signature(call: ToolCall) -> Decision:
     updated = call.args.copy()
     updated["body"] += "\n\nSaludos,\nEquipo empresarial"
@@ -252,6 +241,7 @@ def add_signature(call: ToolCall) -> Decision:
 # ==========================================
 # 6. HOOK DE APROBACIÓN HUMANA
 # ==========================================
+
 
 def human_approval(call: ToolCall) -> Decision:
     print("\n--- CORREO PROPUESTO ---")
@@ -270,6 +260,7 @@ def human_approval(call: ToolCall) -> Decision:
 # ==========================================
 # 7. TOOL SIMULADA
 # ==========================================
+
 
 def execute_tool(call: ToolCall) -> dict:
     print("\n[TOOL] Envío simulado correctamente")
@@ -346,6 +337,7 @@ TOOLS = [
 # 10. AGENTE CON RESPONSES API
 # ==========================================
 
+
 def run_agent(user_message: str):
 
     response = responses_client.responses.create(
@@ -386,11 +378,13 @@ def run_agent(user_message: str):
                 "reason": str(exc),
             }
 
-        outputs.append({
-            "type": "function_call_output",
-            "call_id": item.call_id,
-            "output": json.dumps(result),
-        })
+        outputs.append(
+            {
+                "type": "function_call_output",
+                "call_id": item.call_id,
+                "output": json.dumps(result),
+            }
+        )
 
     if not outputs:
         print(response.output_text)
@@ -417,6 +411,5 @@ def run_agent(user_message: str):
 
 if __name__ == "__main__":
     run_agent(
-        "Envía un correo a contacto@proveedor.com "
-        "confirmando la reunión del viernes a las 10 AM."
+        "Envía un correo a contacto@proveedor.com confirmando la reunión del viernes a las 10 AM."
     )

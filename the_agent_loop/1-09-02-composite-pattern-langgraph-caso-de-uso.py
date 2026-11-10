@@ -1,17 +1,14 @@
-
 import os
-import requests
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import TypedDict, NotRequired
+from typing import NotRequired, TypedDict
 
-from dotenv import load_dotenv
-from openai import OpenAI
+import requests
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
-from langgraph.graph import StateGraph, START, END
-
+from dotenv import load_dotenv
+from langgraph.graph import END, START, StateGraph
+from openai import OpenAI
 
 # =====================================
 # 1. CONFIGURACIÓN
@@ -30,6 +27,7 @@ client = OpenAI(
 # 2. CONTRATOS COMUNES
 # =====================================
 
+
 @dataclass
 class SearchRequest:
     question: str
@@ -46,7 +44,6 @@ class SearchOutput:
 
 # Interfaz Component
 class Searcher(ABC):
-
     @abstractmethod
     def search(self, request: SearchRequest) -> SearchOutput:
         pass
@@ -56,15 +53,13 @@ class Searcher(ABC):
 # 3. LEAF: AZURE AI SEARCH
 # =====================================
 
-class AzureAISearcher(Searcher):
 
+class AzureAISearcher(Searcher):
     def __init__(self):
         self.client = SearchClient(
             endpoint=os.environ["AZURE_SEARCH_ENDPOINT"],
             index_name=os.environ["AZURE_SEARCH_INDEX"],
-            credential=AzureKeyCredential(
-                os.environ["AZURE_SEARCH_API_KEY"]
-            ),
+            credential=AzureKeyCredential(os.environ["AZURE_SEARCH_API_KEY"]),
         )
 
     def search(self, request: SearchRequest) -> SearchOutput:
@@ -73,9 +68,7 @@ class AzureAISearcher(Searcher):
             top=3,
         )
 
-        content_field = os.getenv(
-            "AZURE_SEARCH_CONTENT_FIELD", "content"
-        )
+        content_field = os.getenv("AZURE_SEARCH_CONTENT_FIELD", "content")
 
         items = []
 
@@ -85,14 +78,14 @@ class AzureAISearcher(Searcher):
             if not content:
                 continue
 
-            items.append({
-                "source": "Azure AI Search",
-                "title": str(
-                    doc.get("title") or doc.get("id") or "Documento"
-                ),
-                "content": content[:1500],
-                "url": doc.get("source_url"),
-            })
+            items.append(
+                {
+                    "source": "Azure AI Search",
+                    "title": str(doc.get("title") or doc.get("id") or "Documento"),
+                    "content": content[:1500],
+                    "url": doc.get("source_url"),
+                }
+            )
 
         return SearchOutput(items=items)
 
@@ -101,8 +94,8 @@ class AzureAISearcher(Searcher):
 # 4. LEAF: MICROSOFT WEB IQ
 # =====================================
 
-class WebIQSearcher(Searcher):
 
+class WebIQSearcher(Searcher):
     def search(self, request: SearchRequest) -> SearchOutput:
         response = requests.post(
             "https://api.microsoft.ai/v3/search/web",
@@ -140,8 +133,8 @@ class WebIQSearcher(Searcher):
 # 5. LEAF: OPENWEATHERMAP
 # =====================================
 
-class WeatherSearcher(Searcher):
 
+class WeatherSearcher(Searcher):
     def search(self, request: SearchRequest) -> SearchOutput:
         response = requests.get(
             "https://api.openweathermap.org/data/2.5/weather",
@@ -168,20 +161,24 @@ class WeatherSearcher(Searcher):
             f"Viento: {data['wind']['speed']} m/s"
         )
 
-        return SearchOutput(items=[{
-            "source": "OpenWeatherMap",
-            "title": "Condiciones meteorológicas actuales",
-            "content": content,
-            "url": None,
-        }])
+        return SearchOutput(
+            items=[
+                {
+                    "source": "OpenWeatherMap",
+                    "title": "Condiciones meteorológicas actuales",
+                    "content": content,
+                    "url": None,
+                }
+            ]
+        )
 
 
 # =====================================
 # 6. COMPOSITE: BUSCADOR COMPUESTO
 # =====================================
 
-class CompositeSearcher(Searcher):
 
+class CompositeSearcher(Searcher):
     def __init__(self, name: str, children: list[Searcher]):
         self.name = name
         self.children = children
@@ -196,9 +193,7 @@ class CompositeSearcher(Searcher):
                 output.errors.extend(result.errors)
 
             except Exception as exc:
-                output.errors.append(
-                    f"{type(child).__name__}: {exc}"
-                )
+                output.errors.append(f"{type(child).__name__}: {exc}")
 
         return output
 
@@ -230,6 +225,7 @@ rag_searcher = CompositeSearcher(
 # 8. ESTADO DE LANGGRAPH
 # =====================================
 
+
 class RAGState(TypedDict):
     question: str
     city: str
@@ -243,6 +239,7 @@ class RAGState(TypedDict):
 # =====================================
 # 9. NODO: RECUPERAR INFORMACIÓN
 # =====================================
+
 
 def recuperar(state: RAGState):
     request = SearchRequest(
@@ -264,6 +261,7 @@ def recuperar(state: RAGState):
 # =====================================
 # 10. NODO: RESPONDER CON EL LLM
 # =====================================
+
 
 def responder(state: RAGState):
     evidence = state["evidence"]
@@ -332,21 +330,18 @@ graph = builder.compile()
 # 12. EJECUTAR
 # =====================================
 
-result = graph.invoke({
-    "question": (
-        "¿Es recomendable programar una visita técnica "
-        "a Bogotá hoy considerando la política interna, "
-        "información pública y las condiciones climáticas?"
-    ),
-    "city": "Bogota,CO",
-    "internal_query": (
-        "política visitas técnicas seguridad desplazamientos"
-    ),
-    "web_query": (
-        "Bogotá Colombia alertas movilidad restricciones "
-        "visitas técnicas hoy"
-    ),
-})
+result = graph.invoke(
+    {
+        "question": (
+            "¿Es recomendable programar una visita técnica "
+            "a Bogotá hoy considerando la política interna, "
+            "información pública y las condiciones climáticas?"
+        ),
+        "city": "Bogota,CO",
+        "internal_query": ("política visitas técnicas seguridad desplazamientos"),
+        "web_query": ("Bogotá Colombia alertas movilidad restricciones visitas técnicas hoy"),
+    }
+)
 
 print("\n=== FUENTES RECUPERADAS ===")
 for item in result["evidence"]:

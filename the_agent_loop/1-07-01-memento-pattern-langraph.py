@@ -2,10 +2,10 @@ import os
 from pathlib import Path
 from typing import TypedDict
 
-from openai import OpenAI
-from langgraph.graph import StateGraph, START, END
-from langgraph.checkpoint.memory import InMemorySaver
 from dotenv import load_dotenv
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.graph import END, START, StateGraph
+from openai import OpenAI
 
 load_dotenv()
 
@@ -32,8 +32,7 @@ def editar_documento(state: EditorState):
     user_message = {
         "role": "user",
         "content": (
-            f"Documento actual:\n{state['document']}\n\n"
-            f"Instrucción:\n{state['instruction']}"
+            f"Documento actual:\n{state['document']}\n\nInstrucción:\n{state['instruction']}"
         ),
     }
 
@@ -54,7 +53,8 @@ def editar_documento(state: EditorState):
 
     return {
         "document": nuevo_documento,
-        "messages": state["messages"] + [
+        "messages": state["messages"]
+        + [
             user_message,
             {"role": "assistant", "content": nuevo_documento},
         ],
@@ -69,30 +69,18 @@ builder.add_edge(START, "editar_documento")
 builder.add_edge("editar_documento", END)
 
 # Memento: checkpoints automáticos
-graph = builder.compile(
-    checkpointer=InMemorySaver()
-)
+graph = builder.compile(checkpointer=InMemorySaver())
 
-config = {
-    "configurable": {
-        "thread_id": "sesion-editor-1"
-    }
-}
+config = {"configurable": {"thread_id": "sesion-editor-1"}}
 
 
 # 5. Archivo de trabajo
 file_path = Path("plan.md")
-file_path.write_text(
-    "# Plan del proyecto\n",
-    encoding="utf-8"
-)
+file_path.write_text("# Plan del proyecto\n", encoding="utf-8")
 
 
 def guardar_archivo(state):
-    file_path.write_text(
-        state["document"],
-        encoding="utf-8"
-    )
+    file_path.write_text(state["document"], encoding="utf-8")
 
 
 # 6. Turno 1
@@ -113,12 +101,7 @@ checkpoint_1 = graph.get_state(config)
 
 # 7. Turno 2
 resultado = graph.invoke(
-    {
-        "instruction": (
-            "Reemplaza todo el documento "
-            "por una propuesta diferente."
-        )
-    },
+    {"instruction": ("Reemplaza todo el documento por una propuesta diferente.")},
     config,
 )
 

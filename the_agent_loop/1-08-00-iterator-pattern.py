@@ -1,12 +1,11 @@
-
-import os
 import json
 import logging
+import os
 
 from dotenv import load_dotenv
-from openai import AsyncOpenAI
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
+from openai import AsyncOpenAI
 from pydantic import BaseModel
 
 # 1. Configuración de Azure OpenAI
@@ -38,7 +37,6 @@ async def generar_eventos(mensaje: str):
 
         # Aquí aplicamos el patrón Iterator
         async for evento in stream:
-
             if evento.type == "response.output_text.delta":
                 # Reenviamos solo el fragmento recibido
                 data = json.dumps(

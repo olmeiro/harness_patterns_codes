@@ -1,4 +1,4 @@
-#Imagina que tenemos un agente de IA que debe revisar 10.000 correos electrónicos buscando mensajes urgentes. No queremos descargar los 10.000 correos, sino solicitarlos progresivamente y detenernos cuando encontremos lo que necesitamos.
+# Imagina que tenemos un agente de IA que debe revisar 10.000 correos electrónicos buscando mensajes urgentes. No queremos descargar los 10.000 correos, sino solicitarlos progresivamente y detenernos cuando encontremos lo que necesitamos.
 
 
 # ========================================
@@ -19,7 +19,7 @@ def obtener_pagina(cursor, limite=2):
     """Simula una API que devuelve correos paginados."""
     print(f"📥 Consultando página desde posición {cursor}")
 
-    correos = BUZON[cursor:cursor + limite]
+    correos = BUZON[cursor : cursor + limite]
 
     siguiente = cursor + limite
     if siguiente >= len(BUZON):
@@ -32,8 +32,8 @@ def obtener_pagina(cursor, limite=2):
 # 2. NUESTRO PATRÓN ITERATOR
 # ========================================
 
-class EmailIterator:
 
+class EmailIterator:
     def __init__(self):
         self.cursor = 0
         self.buffer = []
@@ -47,13 +47,10 @@ class EmailIterator:
         # Solo consulta la API cuando se
         # han consumido los correos disponibles
         if not self.buffer:
-
             if self.terminado:
                 raise StopIteration
 
-            self.buffer, siguiente = obtener_pagina(
-                self.cursor
-            )
+            self.buffer, siguiente = obtener_pagina(self.cursor)
 
             if siguiente is None:
                 self.terminado = True
@@ -72,7 +69,6 @@ class EmailIterator:
 # ========================================
 
 for correo in EmailIterator():
-
     print(f"🔍 Revisando: {correo['asunto']}")
 
     if "URGENTE" in correo["asunto"].upper():

@@ -1,16 +1,14 @@
-
-import os
 import json
 import logging
-from typing import TypedDict, NotRequired
+import os
+from typing import NotRequired, TypedDict
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
-
 from langchain_openai import ChatOpenAI
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import END, START, StateGraph
+from pydantic import BaseModel, Field
 
 # 1. Configuración
 load_dotenv()
@@ -43,10 +41,12 @@ def preparar(state: AgentState):
 
 
 async def responder(state: AgentState):
-    resultado = await llm.ainvoke([
-        ("system", "Responde en español de forma clara y breve."),
-        ("human", state["pregunta"]),
-    ])
+    resultado = await llm.ainvoke(
+        [
+            ("system", "Responde en español de forma clara y breve."),
+            ("human", state["pregunta"]),
+        ]
+    )
 
     return {"respuesta": resultado.text}
 

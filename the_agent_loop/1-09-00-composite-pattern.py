@@ -8,24 +8,25 @@ Cómo depurarlo en VS Code (F5 -> "Python File"):
   3. En el panel CALL STACK verás la recursión: redact -> redact -> redact...
   4. En WATCH agrega: self.name, self.text, len(clean_children)
 """
+
 import os
 import re
 from abc import ABC, abstractmethod  # ABC = "clase molde" que no se puede instanciar
-from dataclasses import dataclass    # genera __init__ y __repr__ automáticamente
-from openai import OpenAI
+from dataclasses import dataclass  # genera __init__ y __repr__ automáticamente
+
 from dotenv import load_dotenv
+from openai import OpenAI
 
 
 # 1. Interfaz común (Component)
 # Block es un CONTRATO: dice QUÉ métodos debe tener todo bloque, no CÓMO hacerlos.
 # Al heredar de ABC, Block() da error: solo sirve como molde para las clases hijas.
 class Block(ABC):
-
     # @abstractmethod = "toda clase hija ESTÁ OBLIGADA a implementar este método".
     # Si una hija no lo implementa, Python no deja crear objetos de ella.
     @abstractmethod
-    def render(self) -> str:   # -> str es solo una pista de tipo: devuelve texto
-        pass                   # sin código: cada hija pone el suyo
+    def render(self) -> str:  # -> str es solo una pista de tipo: devuelve texto
+        pass  # sin código: cada hija pone el suyo
 
     @abstractmethod
     def redact(self) -> "Block":
@@ -41,8 +42,8 @@ class Block(ABC):
 #     def __init__(self, text): self.text = text
 # Por eso puedes crear TextBlock("hola") sin haber escrito __init__.
 @dataclass
-class TextBlock(Block):        # (Block) = HERENCIA: TextBlock "es un" Block y cumple su contrato
-    text: str                  # atributo: el texto de la hoja
+class TextBlock(Block):  # (Block) = HERENCIA: TextBlock "es un" Block y cumple su contrato
+    text: str  # atributo: el texto de la hoja
 
     # self = el objeto concreto que recibe la llamada (este TextBlock)
     def render(self) -> str:
@@ -50,18 +51,10 @@ class TextBlock(Block):        # (Block) = HERENCIA: TextBlock "es un" Block y c
 
     def redact(self) -> Block:
         # Ocultar correos electrónicos
-        clean = re.sub(
-            r"\b[\w.+-]+@[\w.-]+\.\w+\b",
-            "[EMAIL_OCULTO]",
-            self.text
-        )
+        clean = re.sub(r"\b[\w.+-]+@[\w.-]+\.\w+\b", "[EMAIL_OCULTO]", self.text)
 
         # Ocultar tokens y contraseñas simples
-        clean = re.sub(
-            r"(?i)\b(token|password|api_key)\s*[:=]\s*\S+",
-            r"\1=[OCULTO]",
-            clean
-        )
+        clean = re.sub(r"(?i)\b(token|password|api_key)\s*[:=]\s*\S+", r"\1=[OCULTO]", clean)
 
         # 🔴 BREAKPOINT (hoja): aquí termina la bajada. Compara self.text vs clean
         return TextBlock(clean)
@@ -75,8 +68,8 @@ class TextBlock(Block):        # (Block) = HERENCIA: TextBlock "es un" Block y c
 # @dataclass genera: def __init__(self, name, children): self.name = name; self.children = children
 @dataclass
 class CompositeBlock(Block):
-    name: str                  # título de la carpeta, ej. "Logs"
-    children: list[Block]      # hijos: pueden ser TextBlock o CompositeBlock (ambos son Block)
+    name: str  # título de la carpeta, ej. "Logs"
+    children: list[Block]  # hijos: pueden ser TextBlock o CompositeBlock (ambos son Block)
 
     def render(self) -> str:
         lines = [f"[{self.name}]"]
@@ -109,43 +102,30 @@ ticket = CompositeBlock(
         CompositeBlock(
             name="Descripción",
             children=[
-                TextBlock(
-                    "La plataforma de pagos devuelve error "
-                    "504. Contacto: ana@empresa.com"
-                )
-            ]
+                TextBlock("La plataforma de pagos devuelve error 504. Contacto: ana@empresa.com")
+            ],
         ),
         CompositeBlock(
             name="Comentarios",
             children=[
-                TextBlock(
-                    "Cliente: falla en 8 de 10 intentos."
-                ),
-                TextBlock(
-                    "Soporte: error reproducido."
-                )
-            ]
+                TextBlock("Cliente: falla en 8 de 10 intentos."),
+                TextBlock("Soporte: error reproducido."),
+            ],
         ),
         CompositeBlock(
             name="Resultado de herramienta",
             children=[
-                TextBlock(
-                    "API /checkout: HTTP 504 Gateway Timeout."
-                ),
+                TextBlock("API /checkout: HTTP 504 Gateway Timeout."),
                 CompositeBlock(
                     name="Logs",
                     children=[
-                        TextBlock(
-                            "Timeout en payments-api después de 30s."
-                        ),
-                        TextBlock(
-                            "token=abc123456"
-                        )
-                    ]
-                )
-            ]
-        )
-    ]
+                        TextBlock("Timeout en payments-api después de 30s."),
+                        TextBlock("token=abc123456"),
+                    ],
+                ),
+            ],
+        ),
+    ],
 )
 
 

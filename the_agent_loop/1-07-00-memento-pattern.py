@@ -1,8 +1,9 @@
 import os
 from copy import deepcopy
 from pathlib import Path
-from openai import OpenAI
+
 from dotenv import load_dotenv
+from openai import OpenAI
 
 load_dotenv()
 
@@ -28,9 +29,7 @@ class Session:
         """Guardar mensajes y archivo antes del cambio."""
         self.checkpoints[turn] = {
             "messages": deepcopy(self.messages),
-            "file_content": self.file.read_text(
-                encoding="utf-8"
-            ),
+            "file_content": self.file.read_text(encoding="utf-8"),
         }
 
     def edit(self, instruction):
@@ -40,15 +39,12 @@ class Session:
         # Memento: guardar estado antes de modificar
         self.checkpoint(turn)
 
-        current_content = self.file.read_text(
-            encoding="utf-8"
-        )
+        current_content = self.file.read_text(encoding="utf-8")
 
         user_message = {
             "role": "user",
             "content": (
-                f"Documento actual:\n{current_content}\n\n"
-                f"Modificación solicitada:\n{instruction}"
+                f"Documento actual:\n{current_content}\n\nModificación solicitada:\n{instruction}"
             ),
         }
 
@@ -70,16 +66,15 @@ class Session:
             raise ValueError("El modelo no devolvió contenido")
 
         # Aplicar modificación al archivo
-        self.file.write_text(
-            new_content,
-            encoding="utf-8"
-        )
+        self.file.write_text(new_content, encoding="utf-8")
 
         # Actualizar conversación
-        self.messages.extend([
-            user_message,
-            {"role": "assistant", "content": new_content},
-        ])
+        self.messages.extend(
+            [
+                user_message,
+                {"role": "assistant", "content": new_content},
+            ]
+        )
 
         self.turn = turn
         print(f"Turno {turn}: documento actualizado")
@@ -92,38 +87,25 @@ class Session:
         self.messages = deepcopy(snapshot["messages"])
 
         # Restaurar archivo
-        self.file.write_text(
-            snapshot["file_content"],
-            encoding="utf-8"
-        )
+        self.file.write_text(snapshot["file_content"], encoding="utf-8")
 
         # Continuar desde el estado restaurado
         self.turn = turn - 1
-        self.checkpoints = {
-            t: cp for t, cp in self.checkpoints.items()
-            if t < turn
-        }
+        self.checkpoints = {t: cp for t, cp in self.checkpoints.items() if t < turn}
 
         print(f"Restaurado al estado anterior al turno {turn}")
 
 
 # 3. Ejemplo de ejecución
-Path("plan.md").write_text(
-    "# Plan del proyecto\n",
-    encoding="utf-8"
-)
+Path("plan.md").write_text("# Plan del proyecto\n", encoding="utf-8")
 
 session = Session("plan.md")
 
 # Turno 1
-session.edit(
-    "Agrega una sección de objetivos del proyecto."
-)
+session.edit("Agrega una sección de objetivos del proyecto.")
 
 # Turno 2
-session.edit(
-    "Reemplaza el documento por una propuesta diferente."
-)
+session.edit("Reemplaza el documento por una propuesta diferente.")
 
 # Recuperar estado anterior al turno 2
 session.rewind(2)
