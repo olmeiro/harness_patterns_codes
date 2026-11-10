@@ -1,0 +1,47 @@
+# Lo único del harness que cambia de un proyecto a otro: qué se revisa y con qué reglas.
+# scripts/gate.py, .claude/ y .github/workflows/ se copian tal cual.
+# Dependencias: requirements.txt (ejecución) y requirements-dev.txt (gate).
+
+[tool.mypy]
+files = ["scripts", ".claude/hooks", "tests"]   # en una API: ["src", "tests"]
+strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+  "E", "F", "I", "B", "UP",   # base: errores, imports, bugs comunes, sintaxis moderna
+  "C901",                     # complejidad ciclomática
+  "PLR0911", "PLR0912",       # demasiados return / ramas
+  "PLR0913", "PLR0915",       # demasiados argumentos / sentencias (proxy de "función larga")
+  "FAST",                     # reglas de FastAPI (FAST003 requiere Ruff >= 0.10)
+  "ASYNC",                    # llamadas bloqueantes dentro de async def
+  "S",                        # seguridad (secretos en código, SQL por concatenación, etc.)
+]
+ignore = ["E501"]             # el formateador controla la longitud de línea
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-args = 7                  # un endpoint FastAPI suma path, body y Depends
+max-branches = 10
+max-statements = 30
+max-returns = 4
+
+[tool.ruff.lint.flake8-bugbear]
+# Sin esto B008 marca Depends()/Query() en los valores por defecto de los endpoints
+extend-immutable-calls = [
+  "fastapi.Depends", "fastapi.Security", "fastapi.Query", "fastapi.Path",
+  "fastapi.Body", "fastapi.Header", "fastapi.Cookie", "fastapi.File", "fastapi.Form",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S603", "PLR0913", "PLR0915"]
+# El harness lanza procesos con argumentos fijos (sys.executable y constantes)
+"scripts/**" = ["S603"]
+".claude/hooks/**" = ["S603"]

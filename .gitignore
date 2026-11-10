@@ -208,6 +208,9 @@ tempCodeRunnerFile.py
 # Ruff stuff:
 .ruff_cache/
 
+# Harness: marca que deja post_edit.py para el hook Stop
+.claude/gate_pendiente
+
 # PyPI configuration file
 .pypirc
 
