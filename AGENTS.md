@@ -37,8 +37,14 @@ python 1-09-00-composite-pattern.py
 ## Definición de terminado
 
 1. `python scripts/gate.py` en verde (lint, formato, tipos y tests). Si falla, corrige y repite.
-2. Revisión independiente (otro agente o una persona) con el diff y la salida del gate, que responde `accept`, `revise` o `block`. Solo `accept` cierra la tarea; con `block`, para y pregunta.
+2. Revisión independiente (otro agente o una persona) contra la spec de la feature (`specs/features/NN-nombre/`) o, si no hay feature, contra lo pedido, con el diff y la salida del gate. Responde `accept`, `revise` o `block`. Solo `accept` cierra la tarea; `revise` admite 2 vueltas; con `block` o a la tercera vuelta, para y pregunta.
 3. Reporta las comprobaciones ejecutadas y su resultado.
+
+## Specs y continuidad
+
+- Método SDD en `specs/orden_spec.md`; cada feature vive en `specs/features/NN-nombre/`, copiada de `_plantilla/`.
+- Al empezar una sesión: lee `specs/progress.md`, mira `git log --oneline -10` y ejecuta el gate antes de tocar nada. Al terminar, actualiza `specs/progress.md`.
+- Lo terminado lo registra git. Un error que se repite se convierte en una línea de este archivo, en una skill o, si puede costar datos, dinero o seguridad, en un hook o una regla del gate (`specs/orden_spec.md` §8).
 
 ## Harness
 
