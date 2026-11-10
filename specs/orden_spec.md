@@ -18,7 +18,7 @@
 
 ## 2. Cómo llena la IA estas plantillas
 
-Cada plantilla trae comentarios `<!-- IA: ... -->` que dicen qué escribir y de dónde sacarlo.
+Cada plantilla trae comentarios `<!-- IA: ... -->` que dicen qué escribir y de dónde sacarlo. En Claude Code, la skill `/specs` aplica este método: `init`, `feature NN-nombre` y `cerrar NN-nombre`.
 
 - **Greenfield**: pregunta a la persona lo que no esté en los documentos anteriores. No propongas alcance que nadie pidió.
 - **Brownfield**: infiere del código, la configuración, los tests y la documentación existente, y cita la fuente (`archivo:línea`). Marca lo inferido con `[inferido]` hasta que la persona lo confirme.
