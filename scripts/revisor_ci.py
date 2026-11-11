@@ -40,6 +40,7 @@ SIN_SPEC = (
 )
 
 CA = re.compile(r"\*\*(CA-\d+)\*\*:?\s*(.+)")
+RAMA_FEATURE = re.compile(r"feature/(\d+-[A-Za-z0-9_-]+)")
 # Determinista, antes del modelo: órdenes al revisor, comentarios HTML ocultos y caracteres invisibles
 MANIPULACION = re.compile(
     r"\b(?:veredicto|verdict)\s*:"
@@ -63,28 +64,34 @@ def git(*args: str) -> str:
     ).stdout
 
 
-def features(tocados: list[str]) -> list[str]:
-    """Carpetas specs/features/NN-nombre que toca el cambio, sin la plantilla."""
+def features(tocados: list[str], rama: str = "") -> list[str]:
+    """Carpetas specs/features/NN-nombre del cambio: las que toca y la de su rama feature/NN-nombre."""
     rutas = map(PurePosixPath, tocados)
-    return sorted(
-        {
-            "/".join(p.parts[:3])
-            for p in rutas
-            if len(p.parts) > 3
-            and p.parts[:2] == ("specs", "features")
-            and p.parts[2] != "_plantilla"
-        }
-    )
+    carpetas = {
+        "/".join(p.parts[:3])
+        for p in rutas
+        if len(p.parts) > 3 and p.parts[:2] == ("specs", "features") and p.parts[2] != "_plantilla"
+    }
+    if m := RAMA_FEATURE.fullmatch(rama):  # un arreglo posterior de la feature no toca su spec
+        carpetas.add(f"specs/features/{m[1]}")
+    return sorted(carpetas)
 
 
-def criterios_ca(feature: str, requirements: str) -> dict[str, str]:
-    """Una pregunta por cada **CA-N** de requirements.md."""
-    return {
-        re.sub(  # nombre ASCII: el de la feature puede traer tildes o ñ
-            r"[^A-Za-z0-9]+", "_", f"{feature}_{m[1]}"
-        ): f"¿El diff cumple este criterio de aceptación de {feature}? {m[1]}: {m[2].strip()}"
+def criterios_feature(feature: str, requirements: str) -> dict[str, str]:
+    """Una pregunta por cada **CA-N** de requirements.md, más el «No tocar» y la evidencia."""
+    preguntas = {
+        f"{m[1]}": f"¿El diff cumple este criterio de aceptación de {feature}? {m[1]}: {m[2].strip()}"
         for m in CA.finditer(requirements)
     }
+    if preguntas:  # sin CA-N la spec está incompleta y main() falla antes de preguntar
+        preguntas["no_tocar"] = (
+            f"¿El diff respeta la sección «No tocar» del plan.md de {feature}, sin modificar nada de lo que prohíbe?"
+        )
+        preguntas["evidencia"] = (
+            f"¿El review.md de {feature} contiene, para cada CA-N, la evidencia que pide su validation.md?"
+        )
+    # nombre ASCII: el de la feature puede traer tildes o ñ
+    return {re.sub(r"[^A-Za-z0-9]+", "_", f"{feature}_{n}"): t for n, t in preguntas.items()}
 
 
 def manipulacion(texto: str) -> list[str]:
@@ -115,7 +122,7 @@ def seccion(titulo: str, cuerpo: str) -> str:
 def contexto(pedido: str) -> tuple[str, dict[str, str]]:
     rango = f"{BASE}...{CAMBIO}"
     tocados = git("diff", "--name-only", "--diff-filter=d", rango).splitlines()  # sin borrados
-    carpetas = features(tocados)
+    carpetas = features(tocados, os.environ.get("REVISOR_RAMA", ""))
     partes, criterios = [], {}
     for carpeta in carpetas:
         for spec in git("ls-tree", "--name-only", CAMBIO, f"{carpeta}/").splitlines():
@@ -123,7 +130,7 @@ def contexto(pedido: str) -> tuple[str, dict[str, str]]:
                 texto = git("show", f"{CAMBIO}:{spec}")
                 partes.append(seccion(f"SPEC {spec}", texto))
                 if spec.endswith("/requirements.md"):
-                    criterios.update(criterios_ca(PurePosixPath(carpeta).name, texto))
+                    criterios.update(criterios_feature(PurePosixPath(carpeta).name, texto))
     if not carpetas:
         partes.append(seccion("LO PEDIDO EN EL PR", pedido or "(el PR no tiene descripción)"))
         criterios["cumple_lo_pedido"] = SIN_SPEC

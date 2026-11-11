@@ -45,6 +45,7 @@ jobs:
         env:
           REVISOR_BASE: origin/main
           REVISOR_HEAD: pr/head
+          REVISOR_RAMA: ${{ github.head_ref }} # feature/NN-nombre: carga su spec aunque no la toque
           AZURE_OPENAI_EVALUATOR_ENDPOINT: ${{ secrets.AZURE_OPENAI_EVALUATOR_ENDPOINT }}
           AZURE_OPENAI_EVALUATOR_API_KEY: ${{ secrets.AZURE_OPENAI_EVALUATOR_API_KEY }}
           AZURE_OPENAI_EVALUATOR_DEPLOYMENT: ${{ vars.AZURE_OPENAI_EVALUATOR_DEPLOYMENT }}
