@@ -1,0 +1,53 @@
+name: Revisor
+
+# Revisión independiente con otro modelo (specs/orden_spec.md §7.4).
+# pull_request_target: el workflow y el revisor salen de main, así que un PR no puede
+# cambiar a su propio revisor. Contrapartida: corre con secretos, por eso aquí nunca se
+# ejecuta código del PR; el PR solo se lee con git, como datos.
+on:
+  pull_request_target:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  revisor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # Un fork no gasta tokens del evaluador. Falla en vez de saltarse el job:
+      # un job saltado cuenta como "Success" en un required check.
+      - name: Los forks no se revisan automáticamente
+        if: github.event.pull_request.head.repo.full_name != github.repository
+        run: |
+          echo "::error::PR desde un fork: el revisor de CI no corre aquí. Revísalo a mano."
+          exit 1
+
+      - uses: actions/checkout@v5 # con pull_request_target esto es main, no el PR
+        with:
+          fetch-depth: 0
+
+      - name: Traer el PR solo como datos
+        env:
+          PR: ${{ github.event.pull_request.number }}
+        run: git fetch --no-tags origin "+refs/pull/$PR/head:refs/remotes/pr/head"
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Instalar el cliente
+        run: python -I -m pip install "openai>=3.26,<4"
+
+      - name: Revisión
+        env:
+          REVISOR_BASE: origin/main
+          REVISOR_HEAD: pr/head
+          AZURE_OPENAI_EVALUATOR_ENDPOINT: ${{ secrets.AZURE_OPENAI_EVALUATOR_ENDPOINT }}
+          AZURE_OPENAI_EVALUATOR_API_KEY: ${{ secrets.AZURE_OPENAI_EVALUATOR_API_KEY }}
+          AZURE_OPENAI_EVALUATOR_DEPLOYMENT: ${{ vars.AZURE_OPENAI_EVALUATOR_DEPLOYMENT }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: python -I scripts/revisor_ci.py

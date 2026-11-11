@@ -1,5 +1,5 @@
 # Lo único del harness que cambia de un proyecto a otro: qué se revisa y con qué reglas.
-# scripts/gate.py, .claude/ y .github/workflows/ se copian tal cual.
+# scripts/, .claude/ y .github/workflows/ se copian tal cual.
 # Dependencias: requirements.txt (ejecución) y requirements-dev.txt (gate).
 
 [tool.mypy]
@@ -43,5 +43,5 @@ extend-immutable-calls = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S603", "PLR0913", "PLR0915"]
 # El harness lanza procesos con argumentos fijos (sys.executable y constantes)
-"scripts/**" = ["S603"]
+"scripts/**" = ["S603", "S607"]   # S607: git se busca en el PATH del runner
 ".claude/hooks/**" = ["S603"]

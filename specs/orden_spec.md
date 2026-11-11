@@ -109,6 +109,7 @@ El revisor empieza con contexto limpio y lee la spec, el diff de toda la rama (`
 @agent-revisor valida specs/features/NN-nombre/
 # En otra sesión
 claude -p --agent revisor "Valida specs/features/NN-nombre/"
+# En el PR: .github/workflows/revisor.yml (obliga a mergear solo si es required check en main)
 ```
 
 | Veredicto | Siguiente paso |
