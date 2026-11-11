@@ -57,12 +57,20 @@ def test_explicar_es_solo_informativa(monkeypatch: pytest.MonkeyPatch) -> None:
     assert "TimeoutError" in revisor_ci.explicar(cliente, "diff", {"rompe_algo": "?"})  # no lanza
 
 
-def test_criterios_ca_una_pregunta_por_criterio() -> None:
+def test_criterios_feature_una_pregunta_por_ca_mas_no_tocar_y_evidencia() -> None:
     requirements = "- [ ] **CA-1**: Dado A, cuando B, entonces C\n- [x] **CA-2** Dado D\ntexto CA-3 sin negrita"
-    criterios = revisor_ci.criterios_ca("02-login", requirements)
-    assert list(criterios) == ["02_login_CA_1", "02_login_CA_2"]
+    criterios = revisor_ci.criterios_feature("02-login", requirements)
+    assert list(criterios) == [
+        "02_login_CA_1",
+        "02_login_CA_2",
+        "02_login_no_tocar",
+        "02_login_evidencia",
+    ]
     assert "Dado A, cuando B, entonces C" in criterios["02_login_CA_1"]
-    assert list(revisor_ci.criterios_ca("03-señal", requirements))[0] == "03_se_al_CA_1"  # ASCII
+    assert (
+        list(revisor_ci.criterios_feature("03-señal", requirements))[0] == "03_se_al_CA_1"
+    )  # ASCII
+    assert revisor_ci.criterios_feature("04-x", "sin criterios") == {}  # spec incompleta: nada
 
 
 @pytest.mark.parametrize(
@@ -104,3 +112,15 @@ def test_features_solo_carpetas_de_feature() -> None:
         "src/app.py",
     ]
     assert revisor_ci.features(tocados) == ["specs/features/02-login"]
+
+
+@pytest.mark.parametrize(
+    ("rama", "esperado"),
+    [
+        ("feature/03-pagos", ["specs/features/03-pagos"]),  # arreglo que no toca la spec
+        ("chore/ask-git-commit", []),
+        ("feature/../../etc", []),  # el nombre de la rama lo controla el autor
+    ],
+)
+def test_features_por_rama(rama: str, esperado: list[str]) -> None:
+    assert revisor_ci.features(["src/app.py"], rama) == esperado
