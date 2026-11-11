@@ -44,12 +44,13 @@ def main() -> None:
         print("No se pudo validar la operación", file=sys.stderr)
         sys.exit(2)
 
+    texto = CONTINUACION.sub(" ", comando)  # une las líneas partidas antes de buscar
     for patron in PATRONES_PROHIBIDOS:
-        if re.search(patron, comando, re.IGNORECASE):
+        if re.search(patron, texto, re.IGNORECASE):
             print("Operación bloqueada por política.", file=sys.stderr)
             sys.exit(2)
 
-    if CONFIRMAR.search(CONTINUACION.sub(" ", comando)):
+    if CONFIRMAR.search(texto):
         print(json.dumps(PREGUNTAR))  # ASCII: la consola de Windows no escribe UTF-8
     sys.exit(0)
 

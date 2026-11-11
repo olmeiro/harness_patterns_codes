@@ -5,16 +5,17 @@
 
 ## Estado actual
 
-Revisor de CI en `main` (PR #1): `.github/workflows/revisor.yml` + `scripts/revisor_ci.py` con `gpt-5.2`. Gate verde en CI (29 tests), ya sin el aviso de Node 20. `revisor` comprobado de punta a punta en el PR #2: llama a Azure, lee el veredicto y falla cerrado. Constitución sin llenar (`/specs init` pendiente).
+Revisor de CI en `main` y obligatorio (ruleset con `gate` y `revisor`). Rama `chore/ask-git-commit`: commits y push piden confirmación (reglas `ask` + `validar_comando.py`), comprobado en modo auto; revisor `accept` en la vuelta 3, gate verde (50 tests); falta commitear la última vuelta y abrir el PR. Plantilla `harness-python` armada en `C:\Users\OlmeiroOrozcoOrtiz\Downloads\harness-python` con los mismos cambios, sin commitear ni publicar. Constitución sin llenar.
 
 ## Siguiente paso
 
-Añadir `revisor` como required check en el ruleset de `main`.
+PR de `chore/ask-git-commit`; publicar `harness-python` y marcarlo como Template repository; luego `/specs init` en `init/constitucion`.
 
 ## Bloqueos
 
-- El deny `**/.env.*` de `.claude/settings.json` impide a los agentes leer y editar `the_agent_loop/.env.template`, que AGENTS.md pide mantener al día. Por eso las variables `AZURE_OPENAI_EVALUATOR_*` se añadieron a mano. Decidir si se exceptúa el template.
+- El deny `**/.env.*` de `.claude/settings.json` impide a los agentes leer y editar `the_agent_loop/.env.template`, que AGENTS.md pide mantener al día (en la plantilla ya se documenta que lo edita la persona). Decidir si este repo adopta esa misma redacción.
 
 ## Registro de sesiones
 
+2026-11-11 — confirmación obligatoria para commits/push y plantilla `harness-python` — accept del revisor; pendientes PR y publicación.
 2026-11-11 — revisor independiente en CI con Azure OpenAI y acciones a Node 24 — mergeado (PR #1) y probado en CI (PR #2).

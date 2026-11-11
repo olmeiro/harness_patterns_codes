@@ -30,6 +30,7 @@ def bash(comando: str) -> dict[str, object]:
         "rm -rf /tmp/x",
         "git push origin main --force",
         "git reset --hard",
+        "git push origin main \\\n--force",  # partido en dos líneas
         "cat .env",
         "type the_agent_loop\\.env.local",
         "python -c \"print(open('.env').read())\"",
