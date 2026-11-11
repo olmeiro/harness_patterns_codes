@@ -48,6 +48,8 @@ jobs:
           AZURE_OPENAI_EVALUATOR_ENDPOINT: ${{ secrets.AZURE_OPENAI_EVALUATOR_ENDPOINT }}
           AZURE_OPENAI_EVALUATOR_API_KEY: ${{ secrets.AZURE_OPENAI_EVALUATOR_API_KEY }}
           AZURE_OPENAI_EVALUATOR_DEPLOYMENT: ${{ vars.AZURE_OPENAI_EVALUATOR_DEPLOYMENT }}
+          # Opcional: modelo que explica las preguntas fallidas; no cambia la decisión
+          AZURE_OPENAI_EVALUATOR_EXPLAINER_DEPLOYMENT: ${{ vars.AZURE_OPENAI_EVALUATOR_EXPLAINER_DEPLOYMENT }}
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BODY: ${{ github.event.pull_request.body }}
         run: python -I scripts/revisor_ci.py
