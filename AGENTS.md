@@ -32,7 +32,7 @@ python 1-09-00-composite-pattern.py
 
 ## Variables de entorno
 
-`.env` está en `.gitignore`; `.env.template` sí se versiona: al introducir una variable nueva, añádela al template. Obligatorias en todo script con LLM: `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_DEPLOYMENT`. El resto está documentado en el template.
+`.env` está en `.gitignore`; `the_agent_loop/.env.template` sí se versiona. Los agentes no pueden leer ni editar ningún `.env*`, tampoco el template: al introducir una variable nueva, pide a la persona que la añada al template. Obligatorias en todo script con LLM: `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_DEPLOYMENT`. El resto está documentado en el template.
 
 ## Definición de terminado
 
@@ -51,4 +51,5 @@ python 1-09-00-composite-pattern.py
 - Qué revisa el gate (rutas, reglas, umbrales) está en `pyproject.toml`. `scripts/`, `.claude/` y `.github/workflows/` se copian igual a otros proyectos.
 - Dependencias: `requirements.txt` para ejecutar y `requirements-dev.txt` (la incluye) para el gate.
 - `tests/test_harness.py` prueba que los hooks bloquean lo que prometen.
+- Commits y push los hace la persona. No los ejecutes si no te lo pidió para ese cambio: prepara los archivos y propón el mensaje. Si lo intentas, las reglas `ask` de `settings.json` le piden confirmación también en modo auto ([permisos de Claude Code](https://code.claude.com/docs/en/permissions); comprobado en la práctica el 2026-11-11), y `validar_comando.py` cubre las variantes que esas reglas no ven.
 - En cada PR, `.github/workflows/revisor.yml` ejecuta `scripts/revisor_ci.py`: mismo prompt que el subagente `revisor`, sin herramientas y con un modelo de Azure (`AZURE_OPENAI_EVALUATOR_*`: endpoint y clave como *secrets*, deployment como *variable* del repo). Corre con `pull_request_target`, así que workflow y revisor salen siempre de `main`; por eso nunca debe ejecutar código del PR, solo leerlo con git. Solo es obligatorio si `gate` y `revisor` son *required checks* de `main` (Settings → Rules) en cada repo donde se copie.
