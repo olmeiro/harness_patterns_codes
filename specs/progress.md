@@ -5,7 +5,7 @@
 
 ## Estado actual
 
-Revisor de CI en `main` y obligatorio (ruleset con `gate` y `revisor`). Rama `chore/ask-git-commit`: commits y push piden confirmación (reglas `ask` + `validar_comando.py`), comprobado en modo auto; revisor `accept` en la vuelta 3, gate verde (50 tests); falta commitear la última vuelta y abrir el PR. Plantilla `harness-python` armada en `C:\Users\OlmeiroOrozcoOrtiz\Downloads\harness-python` con los mismos cambios, sin commitear ni publicar. Constitución sin llenar.
+Revisor de CI en `main` y obligatorio (ruleset con `gate` y `revisor`). PR #3 (`chore/ask-git-commit`): commits, push y `gh pr merge` piden confirmación (reglas `ask` + `validar_comando.py`), comprobado en modo auto; en revisión en CI. Plantilla `harness-python` preparada en local con los mismos cambios, sin publicar. Constitución sin llenar.
 
 ## Siguiente paso
 

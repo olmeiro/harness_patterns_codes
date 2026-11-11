@@ -16,6 +16,8 @@
       "Bash(git push *)",
       "PowerShell(git commit *)",
       "PowerShell(git push *)",
+      "Bash(gh pr merge *)",
+      "PowerShell(gh pr merge *)",
       "Bash(az *)",
       "Bash(pip install *)",
       "Bash(uv pip install *)"
