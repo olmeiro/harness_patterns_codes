@@ -13,7 +13,7 @@ PR de `chore/ask-git-commit`; publicar `harness-python` y marcarlo como Template
 
 ## Bloqueos
 
-- El deny `**/.env.*` de `.claude/settings.json` impide a los agentes leer y editar `the_agent_loop/.env.template`, que AGENTS.md pide mantener al día (en la plantilla ya se documenta que lo edita la persona). Decidir si este repo adopta esa misma redacción.
+Ninguno.
 
 ## Registro de sesiones
 

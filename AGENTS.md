@@ -32,7 +32,7 @@ python 1-09-00-composite-pattern.py
 
 ## Variables de entorno
 
-`.env` está en `.gitignore`; `.env.template` sí se versiona: al introducir una variable nueva, añádela al template. Obligatorias en todo script con LLM: `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_DEPLOYMENT`. El resto está documentado en el template.
+`.env` está en `.gitignore`; `the_agent_loop/.env.template` sí se versiona. Los agentes no pueden leer ni editar ningún `.env*`, tampoco el template: al introducir una variable nueva, pide a la persona que la añada al template. Obligatorias en todo script con LLM: `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_DEPLOYMENT`. El resto está documentado en el template.
 
 ## Definición de terminado
 
