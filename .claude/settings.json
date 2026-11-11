@@ -12,7 +12,10 @@
       "Bash(git show*)"
     ],
     "ask": [
+      "Bash(git commit *)",
       "Bash(git push *)",
+      "PowerShell(git commit *)",
+      "PowerShell(git push *)",
       "Bash(az *)",
       "Bash(pip install *)",
       "Bash(uv pip install *)"
