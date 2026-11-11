@@ -48,6 +48,7 @@ python 1-09-00-composite-pattern.py
 
 ## Harness
 
-- Qué revisa el gate (rutas, reglas, umbrales) está en `pyproject.toml`. `scripts/gate.py`, `.claude/` y `.github/workflows/` se copian igual a otros proyectos.
+- Qué revisa el gate (rutas, reglas, umbrales) está en `pyproject.toml`. `scripts/`, `.claude/` y `.github/workflows/` se copian igual a otros proyectos.
 - Dependencias: `requirements.txt` para ejecutar y `requirements-dev.txt` (la incluye) para el gate.
 - `tests/test_harness.py` prueba que los hooks bloquean lo que prometen.
+- En cada PR, `.github/workflows/revisor.yml` ejecuta `scripts/revisor_ci.py`: mismo prompt que el subagente `revisor`, sin herramientas y con un modelo de Azure (`AZURE_OPENAI_EVALUATOR_*`: endpoint y clave como *secrets*, deployment como *variable* del repo). Corre con `pull_request_target`, así que workflow y revisor salen siempre de `main`; por eso nunca debe ejecutar código del PR, solo leerlo con git. Solo es obligatorio si `gate` y `revisor` son *required checks* de `main` (Settings → Rules) en cada repo donde se copie.
