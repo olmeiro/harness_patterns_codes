@@ -5,16 +5,16 @@
 
 ## Estado actual
 
-Rama `replanning/revisor-ci`, sin commitear: revisor de CI con Azure OpenAI (`.github/workflows/revisor.yml` + `scripts/revisor_ci.py`, `pull_request_target`), acciones a Node 24. Gate verde (29 tests). Revisor: `accept` en la vuelta 3 (revise en las vueltas 1 y 2, todo corregido). Secrets y variable (`gpt-5.2`) ya configurados en GitHub. Constitución sin llenar (`/specs init` pendiente).
+Revisor de CI en `main` (PR #1): `.github/workflows/revisor.yml` + `scripts/revisor_ci.py` con `gpt-5.2`. Gate verde en CI (29 tests), ya sin el aviso de Node 20. `revisor` aún no es required check porque no ha corrido nunca. Constitución sin llenar (`/specs init` pendiente).
 
 ## Siguiente paso
 
-Commit y PR de `replanning/revisor-ci` a `main` (protegido solo por `gate`). Tras el merge, un PR de prueba para que `revisor` corra por primera vez contra Azure; luego añadir `revisor` como required check en el ruleset de `main`.
+Comprobar que `revisor` corre en el PR `chore/progreso-tras-revisor-ci` y, si da su veredicto, añadirlo como required check en el ruleset de `main`.
 
 ## Bloqueos
 
-- `the_agent_loop/.env.template`: añadir `AZURE_OPENAI_EVALUATOR_*` a mano (el deny `**/.env.*` de `settings.json` también bloquea el template).
+- El deny `**/.env.*` de `.claude/settings.json` también bloquea `.env.template`, que AGENTS.md pide mantener: decidir si se exceptúa.
 
 ## Registro de sesiones
 
-2026-11-11 — revisor independiente en CI con Azure OpenAI y acciones a Node 24 — accept en la vuelta 3, listo para PR.
+2026-11-11 — revisor independiente en CI con Azure OpenAI y acciones a Node 24 — mergeado en PR #1; falta probar `revisor` en un PR.
